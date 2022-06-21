@@ -19,7 +19,7 @@ def get_heatmap_hover_template():
     hovertext = [
             "<span style='font-family:Open Sans; font-size:16px'> <b>Region: </b>%{y}</span>",
             "<span style='font-family:Open Sans'> <b>Year: </b> %{x}</span>",
-            "<span style='font-family:Open Sans'> <b>Voyage: </b> %{z} (%{customdata}%)</span> ",
+            "<span style='font-family:Open Sans'> <b>Voyage: </b> %{text} (%{customdata}%)</span> ",
             "<extra></extra>"
         ]
 
@@ -96,3 +96,37 @@ def get_stackbar_hover_template():
     template = "<br>".join(hovertext)
 
     return template
+
+
+def get_map_hover_template():
+
+    # Define and return the hover template
+
+    hovertext = [
+            "<span style='font-family:Open Sans'> <b>Region: </b>%{customdata[1]}</span>",
+            "<span style='font-family:Open Sans'> <b>Harbour: </b>%{customdata[0]}</span>",
+            "<span style='font-family:Open Sans'> <b>Event Type: </b>%{customdata[2]}</span>",
+            "<span style='font-family:Open Sans'> <b>Latitude: </b> %{lat}</span>",
+            "<span style='font-family:Open Sans'> <b>Longitude: </b> %{lon}</span>",
+            "<extra></extra>"
+        ]
+
+    template = "<br>".join(hovertext)
+
+    return template
+
+
+def get_vesselport_hover_template():
+
+    # Define and return the hover template
+
+    hovertext = [
+            "<span style='font-family:Open Sans'> <b>Harbour: </b>%{y}</span>",
+            "<span style='font-family:Open Sans'> <b>Voyage: </b>%{x}</span>",
+            "<extra></extra>"
+        ]
+
+    template = "<br>".join(hovertext)
+
+    return template
+

@@ -22,17 +22,34 @@ import plotly.graph_objects as go
 
 import template
 import preprocess
-import heatmap, line_charts, bar_charts
+import heatmap, line_charts, bar_charts, hover_template, dot_charts
 #
 #
-trips_filename = "./assets/data/TRIP_NEW.csv" # TRIP_NEW.csv
+# read and process original trip file.
+trips_filename = "./assets/data/TRIP_NEW.csv"
 detail_filename = "./assets/data/TRIP_DETAIL_NEW.csv"
+# # saved the processed file (get rid of the columns we do not use)
+#trips_filename = "./assets/data/trips_slim.csv"
 
 trips_df = pd.read_csv(trips_filename)
 detail_df = pd.read_csv(detail_filename)
 
 trips_df_heat = preprocess.convert_dates(trips_df)
 trips_df_heat = preprocess.filter_years(trips_df_heat, 2011, 2021)  # to be used in region, harbour, vessel.
+
+
+
+#
+# debug start
+# yearly_df = preprocess.summarize_yearly_counts(trips_df_heat, 0) # 0 means Departure trip, comes from radio button
+# data = preprocess.restructure_df(yearly_df)
+
+# eg_region = "St. Lawrence Seaway Region"
+# eg_harbour = "Lac St-Louis (area)"
+# year = 2016
+# line_data = preprocess.get_depart_by_harbour(trips_df_heat, eg_region, eg_harbour)
+# line_data = preprocess.prepare_day_month_data_by_harbour(line_data, year, "daily")
+# debug end
 
 # summary panel
 total_voyage0 = trips_df_heat.shape[0]
@@ -50,8 +67,6 @@ regions_harbours = detail_df[["Region","Hardour"]].groupby(["Region", "Hardour"]
 
 template.create_custom_theme()
 template.set_default_theme()
-
-# not needed trip_ids = sorted(trips_df["Id"].unique())
 
 
 radio_trip_direction = dcc.RadioItems(
@@ -86,14 +101,13 @@ feature_ops = dbc.RadioItems(
 
 # ----------------- app  ------------------------
 app = dash.Dash(__name__, suppress_callback_exceptions=True)
-server = app.server
-
 app.title = 'PROJECT | INF8808'
+
 
 app.layout = html.Div([
     html.Header([
         html.H1('Maritime Traffic in Canada'),
-        html.H2('From 2011 to 2021 ---- XPERT SOLUTIONS')
+#        html.H2('From 2011 to 2021 ---- XPERT SOLUTIONS')
     ]),
 
     # dcc.Store stores the intermediate value
@@ -102,12 +116,11 @@ app.layout = html.Div([
 # panel summary
     html.Div([
         html.Div([
-            html.Label(
-                "Summary statistic of maritime traffic in Cananda from 2011 to 2021.",
-                style={"font-size": "medium"},
+            html.P(
+                "   Summary statistic of maritime traffic in Canada from 2011 to 2021.",
+                style={"font-size": "medium",
+                       "margin": "24px" },
             ),
-
-            html.Br(),
             html.Div([
                     html.Div([
                             html.H4(
@@ -166,15 +179,17 @@ app.layout = html.Div([
                         className="box_summary",
                     ),
 
-
-
                 ],
                 style={"display": "flex"},
             ),
         ],
             className="box",
-            style={"heigth": "100%",
-                   "width": "100%"},
+            style={
+                "margin": "0px",
+                "padding-top": "0px",
+                "padding-bottom": "0px",
+                "heigth": "100%",
+                "width": "100%"},
         ),
 
  # if come back to two columns in summary panel, uncomment below.
@@ -246,7 +261,7 @@ def update_page(filter_chosen):
                     "margin": "2px",
                     "padding-top": "2px",
                     "padding-bottom": "2px",
-                    "width": "96%"
+                    "width": "100%"
                 },
             ),
 
@@ -271,7 +286,7 @@ def update_page(filter_chosen):
                     "margin": "2px",
                     "padding-top": "2px",
                     "padding-bottom": "2px",
-                    "width": "96%"
+                    "width": "100%"
                 },
             ),
 
@@ -296,7 +311,7 @@ def update_page(filter_chosen):
                     "margin": "2px",
                     "padding-top": "2px",
                     "padding-bottom": "2px",
-                    "width": "96%"
+                    "width": "100%"
                 },
             ),
 
@@ -307,38 +322,42 @@ def update_page(filter_chosen):
                 html.Div([
                     html.Div([
                         html.Div([
-                                html.Br(),
-                                html.P(
-                                    "the original design displays long name in 2 lines. Temporarily made the graph to next line."
-                                ),
+                                html.Label("Select a Region",
+                                   style={"padding-left": "20px"},
+                                   ),
                                 html.Div([
-                                    "Select a Region",
                                     dcc.Dropdown(id='region_selector', multi=False,
                                                  options=[{'label': x, 'value': x} for x in regions_sorted],
                                                  value="Pacific Region",
                                                  searchable=True,
                                                  clearable=True,
-                                                 style={'width': "100%"}, ),
+                                                 style={'width': "98%"}, ),
                                 ]),
-
-                                html.Br(),
+                            ],
+                            className='box',
+                            style={"width": "50%"},
+                        ),
+                        html.Div([
+                                html.Label('Select a harbour',
+                                       style={"padding-left": "20px"},
+                                       ),
                                 html.Div([
-                                    'Select a harbour',
                                     dcc.Dropdown(
                                                  id='harbour_selector', multi=False,
                                                  searchable=True,
                                                  placeholder='Select a Region, then a Harbour...',
                                                  clearable=True,
-                                                 style={'width': "100%"}, ),
+                                                 style={'width': "98%"}, ),
                                 ]),
-                            ]),
+                            ],
+                            className='box',
+                            style={"width": "50%"},
+                        ),
                     ],
-                        className="box",
+                        className="row",
                         style={
-                            "margin": "2px",
-                            "padding-top": "2px",
-                            "padding-bottom": "2px",
-                             "width": "40%"},
+                            "padding-top": "8px",
+                            "padding-bottom": "8px",},
                     ),
 
                     html.Div([
@@ -362,7 +381,7 @@ def update_page(filter_chosen):
                             "margin": "2px",
                             "padding-top": "2px",
                             "padding-bottom": "2px",
-                             "width": "98%",
+                             "width": "100%",
                                },
                     )
             ],
@@ -391,7 +410,7 @@ def update_page(filter_chosen):
                         "margin": "2px",
                         "padding-top": "2px",
                         "padding-bottom": "2px",
-                         "width": "96%",
+                         "width": "100%",
                            },
                 ),
 
@@ -416,7 +435,7 @@ def update_page(filter_chosen):
                         "margin": "2px",
                         "padding-top": "2px",
                         "padding-bottom": "2px",
-                        "width": "96%",
+                        "width": "100%",
                     },
                 ),
 
@@ -464,21 +483,32 @@ def update_page(filter_chosen):
                         "padding-top": "2px",
                         "padding-bottom": "2px",
                         "heigth": "100%",
-                        "width": "70%"},
+                        "width": "65%"},
                     ),
 
                     html.Div([
-                        html.Label(
-                            "A table of two columns",
-                        ),
+                        html.Div([
+                            dcc.Graph(
+                                id='dot_vessel',
+                                className='graph',
+                                figure={},
+                                config=dict(
+                                    scrollZoom=False,
+                                    showTips=False,
+                                    showAxisDragHandles=False,
+                                    doubleClick=False,
+                                    displayModeBar=False
+                                )
+                            ),
+                        ]),
                     ],
                         className="box",
                         style={
                             "margin": "2px",
                             "padding-top": "2px",
-                            "padding-bottom": "2px",
+                            # "padding-bottom": "2px",
                             "heigth": "100%",
-                            "width": "30%",
+                            "width": "34%",
                         },
                     )
                 ],
@@ -499,13 +529,6 @@ def update_page(filter_chosen):
 
                     html.Div([
                         html.Div([
-                            # dcc.Dropdown(id='trip_selector', multi=False,
-                            #              options=[{'label': x, 'value': x} for x in trip_ids[:4000]],
-                            #          #    value=["Special Purpose"],
-                            #              searchable=True,
-                            #              placeholder='Select a Vessel Type...',
-                            #              clearable=True,
-                            #              style={'width': "40%"}, ),
                             dcc.Input(id="trip_input", type="text",
                                       value="2079000000818245",
                                       placeholder="string",
@@ -529,18 +552,18 @@ def update_page(filter_chosen):
                         ],
                             className="box",
                             style = {
-                                "margin": "2px",
+                                "margin": "4px",
                                 "padding-top": "2px",
                                 "padding-bottom": "2px",
                                 "heigth": "100%",
-                                "width": "92%"},
+                                "width": "96%"},
                         ),
 
                     ]),
                 ],
                     className="box",
                     style={
-                        "margin": "2px",
+                        "margin": "4px",
                         "padding-top": "2px",
                         "padding-bottom": "2px",
                         "heigth": "100%",
@@ -794,8 +817,47 @@ def updape_heat_by_vessel(vessel_chosen):
 
     return region_heat_fig
 
-# vessel page voyage/harbour section. TBD
+# vessel page voyage/harbour section.
+@app.callback(
+    Output('dot_vessel', 'figure'),
+    [Input('heatmap_vessel', 'clickData'),
+     Input("vessel_selector", "value")]
+)
+def vessel_heatmap_clicked(click_data, vessel_chosen):
+    '''
+        When a cell in the heatmap is clicked, updates the
+        line chart to show the data for the corresponding
+        region & year. If there is no data to show,
+        displays a message.
 
+        Args:
+            The necessary inputs and states to update the
+            line chart.
+        Returns:
+            The necessary output values to update the line
+            chart.
+    '''
+    if click_data is None or click_data['points'][0]['z'] == 0:
+        dot_fig_empty = dot_charts.get_empty_figure()
+        return dot_fig_empty
+
+    region = click_data['points'][0]['y']
+    year = click_data['points'][0]['x']
+
+    # vessel usage in a harbour dot plot
+    dotplot_data = preprocess.get_vessel_harbour(
+        trips_df_heat,
+        vessel_chosen,
+        region,
+        year
+    )
+
+  #  print(region, year, vessel_chosen, dotplot_data.head())
+
+    fig_RHV = dot_charts.get_vesselport_figure(dotplot_data, region, year)
+
+
+    return fig_RHV
 
 
 
@@ -823,15 +885,18 @@ def retrieve_passage(trip_id):
     fig = px.scatter_mapbox(atrip, lat=lats, lon=longs,
                             hover_data=[atrip["Event Type"], atrip["Rank Number"], atrip.Hardour,
                                         atrip.Region],
-                            # color = tst_atrip["Event Type"],
                             zoom=5
                             )
     fig.update_layout(mapbox_style="carto-positron"  # "stamen-toner",
                       )
 
     fig.update_traces(mode="lines+markers")
+
+    fig.update_traces(
+        hovertemplate=hover_template.get_map_hover_template()
+    )
+
     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
- #   fig.update_layout(height=500, width=800, margin={"r": 0, "t": 0, "l": 0, "b": 0})
 
     return fig, pattern
 

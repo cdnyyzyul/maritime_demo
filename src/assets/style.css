@@ -1,7 +1,7 @@
 body {
     font-family: 'Montserrat', 'sans-serif';
     font-size: 16px;
-    background-color: #EBF2FA;
+    background-color: #F9F9F8;
     color: #2D3E54;
     margin: 0;
     height: 100vh;
@@ -147,15 +147,15 @@ button:hover, button:active {
 .box {
   border-radius: 10px;
   background-color: #F9F9F8;
-  margin: 10px;
-  padding: 25px;
+  margin: 1px;
+  padding: 1px;
   box-shadow: 2px 2px 2px lightgrey;
 }
 
 .box_summary{
   border-radius: 0px;
   background-color: #F9F9F8;
-  border: 2px solid #8BC8FF;
+  border: 1px solid #8BC8FF;
   margin: 30px;
   justify-content: center;
   width: 18%;
@@ -199,6 +199,3 @@ button:hover, button:active {
   border: 2px solid #e1e2df;
 }
 */
-#aggregate_data {
-  align-items: center;
-}

@@ -254,3 +254,24 @@ def get_trip_duration(trips_df, total_voyage):
     avg_duration_hour = round(total_duration_hour / total_voyage, 2)
     avg_duration_hour = "{:,}".format(avg_duration_hour)
     return avg_duration_hour
+
+def get_vessel_harbour(trips_df_heat, vessel_chosen, region, year):
+
+    trips_vessel = trips_df_heat.loc[trips_df_heat["Vessel Type"] == vessel_chosen]
+
+    trips_vessel_depart = trips_vessel.loc[(trips_vessel["Departure Date"].dt.year == year) &
+                                           (trips_vessel["Departure Region"] == region)][["Departure Hardour"]]
+    trips_vessel_depart.rename(columns={"Departure Hardour": "Harbour"}, inplace=True)
+
+    trips_vessel_arrive = trips_vessel.loc[(trips_vessel["Arrival Date"].dt.year == year) &
+                                           (trips_vessel["Arrival Region"] == region)][["Arrival Hardour"]]
+    trips_vessel_arrive.rename(columns={"Arrival Hardour": "Harbour"}, inplace=True)
+
+    trips_vessel_rh = trips_vessel_depart.append(trips_vessel_arrive)
+    trips_vessel_rh = trips_vessel_rh.groupby(["Harbour"]
+                                              ).agg(Counts=pd.NamedAgg(column="Harbour", aggfunc="count"),
+                                                    ).reset_index()
+
+    trips_vessel_rh_dot_data = trips_vessel_rh.sort_values(by="Counts")
+
+    return trips_vessel_rh_dot_data

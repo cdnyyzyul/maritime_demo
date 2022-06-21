@@ -5,6 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from template import THEME
 import hover_template
+import numpy as np
 
 
 def get_figure(data, direction, total_voyage):
@@ -31,11 +32,12 @@ def get_figure(data, direction, total_voyage):
     #                 y=yticklabel
     #                 )
     fig = go.Figure(data=go.Heatmap(
-        z=data,
+        z=np.log10(data),
         x=xticklabel,
         y=yticklabel,
         colorbar_title="Voyage",
-        customdata=round(data / total_voyage * 100, 2)
+        customdata=round(data / total_voyage * 100, 2),
+        text = data
     ))
 
 

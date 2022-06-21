@@ -13,10 +13,10 @@ THEME = {
     # 'pale_color': '#DFD9E2',
     'line_chart_color': '#97939A',
     'line_bar_color_depart':'#0077DD',
-    'line_bar_color_arrival':'#5b5b5b',
+    'line_bar_color_arrival': '#8F329F',         # '#5b5b5b', grey was not recommended. change to purple.
     'line_bar_color_total':'#008000',
     'departure_colorscales':"blues",
-    'arrival_colorscales':"greys",
+    'arrival_colorscales':"purples",   # change from grays.
     'label_font_size': 14,
     'label_background_color': '#ffffff',
     'colorscale': 'greens'
