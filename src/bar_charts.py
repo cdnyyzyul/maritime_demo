@@ -29,7 +29,7 @@ def get_empty_figure():
             dict(
                 xref="paper",
                 yref="paper",
-                text="Select a cell in the heatmap to show monthly voyages. Or no data in this territory",
+                text="Select a region and a harbour to start.",
                 showarrow=False,
                 align="center",
             )
@@ -38,32 +38,6 @@ def get_empty_figure():
 
     return fig
 
-
-def add_rectangle_shape(fig):
-    '''
-        Adds a rectangle to the figure displayed
-        behind the informational text. The color
-        is the 'pale_color' in the THEME dictionary.
-
-        The rectangle's width takes up the entire
-        paper of the figure. The height goes from
-        0.25% to 0.75% the height of the figure.
-    '''
-    # Draw the rectangle
-
-    fig.update_layout(
-        shapes=[
-            dict(
-                type="rect",
-                xref="paper",
-                yref="paper",
-                #fillcolor=THEME["pale_color"],
-                x0=0, y0=0.25, x1=1, y1=0.75,
-                line=dict(width=0)
-            )
-        ]
-    )
-    return None
 
 
 def get_region_figure(bar_data, region, year, trip_direction, harbour=""):

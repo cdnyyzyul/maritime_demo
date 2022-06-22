@@ -7,7 +7,7 @@ import hover_template
 from template import THEME
 
 
-def get_empty_figure():
+def get_empty_figure(page):
     '''
         Returns the figure to display when there is no data to show.
 
@@ -15,6 +15,11 @@ def get_empty_figure():
         in the heatmap for more information.
 
     '''
+    text_info = {
+        "region_page": "Select a cell in the heatmap<br>use the toggle to show daily or monthly voyages.",
+        "harbour_page": "Click on a stacked bar<br>use the toggle to show daily or monthly voyages."
+    }
+
 
     # Construct the empty figure to display.
 
@@ -28,7 +33,7 @@ def get_empty_figure():
             dict(
                 xref="paper",
                 yref="paper",
-                text="Select a cell in the heatmap to show daily voyages.",
+                text=text_info[page],
                 showarrow=False,
                 align="center",
             )
@@ -36,33 +41,6 @@ def get_empty_figure():
     )
 
     return fig
-
-
-def add_rectangle_shape(fig):
-    '''
-        Adds a rectangle to the figure displayed
-        behind the informational text. The color
-        is the 'pale_color' in the THEME dictionary.
-
-        The rectangle's width takes up the entire
-        paper of the figure. The height goes from
-        0.25% to 0.75% the height of the figure.
-    '''
-    # Draw the rectangle
-
-    fig.update_layout(
-        shapes=[
-            dict(
-                type="rect",
-                xref="paper",
-                yref="paper",
-                #fillcolor=THEME["pale_color"],
-                x0=0, y0=0.25, x1=1, y1=0.75,
-                line=dict(width=0)
-            )
-        ]
-    )
-    return None
 
 
 def get_region_figure(line_data, region, year, trip_direction, harbour=""):

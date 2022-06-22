@@ -8,9 +8,7 @@ import plotly.io as pio
 THEME = {
     # 'background_color': '#ffffff',
     'font_family': 'Open Sans',
-    # 'accent_font_family': 'Roboto Slab',
     'dark_color': '#2A2B2E',
-    # 'pale_color': '#DFD9E2',
     'line_chart_color': '#97939A',
     'line_bar_color_depart':'#0077DD',
     'line_bar_color_arrival': '#8F329F',         # '#5b5b5b', grey was not recommended. change to purple.

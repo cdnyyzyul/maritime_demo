@@ -57,8 +57,9 @@ def get_vesselport_figure(dotplot_data, region, year):
     fig_VRH.update_traces(textposition='top right')
     fig_VRH.update_layout(xaxis=dict(showgrid=True, showline=False),
                           yaxis=dict(showgrid=False, showline=True),
-                          height=800,
+                          height=700,
                           xaxis_title="Number of voyages",
+                          xaxis_tickangle=0
                           )
 
     fig_VRH.update_traces(

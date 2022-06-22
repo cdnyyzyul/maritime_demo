@@ -25,19 +25,25 @@ import preprocess
 import heatmap, line_charts, bar_charts, hover_template, dot_charts
 #
 #
-# read and process original trip file.
-trips_filename = "./assets/data/TRIP_NEW.csv"
-detail_filename = "./assets/data/TRIP_DETAIL_NEW.csv"
-# # saved the processed file (get rid of the columns we do not use)
-#trips_filename = "./assets/data/trips_slim.csv"
+# When data is local, read and process original trip file.
+# trips_filename = "./assets/data/TRIP_NEW.csv"
+# detail_filename = "./assets/data/TRIP_DETAIL_NEW.csv"
+## or read from a smaller file saved the processed file (get rid of the columns we do not use)
+# trips_filename = "./assets/data/trips_slim.csv"
+# detail_filename = "./assets/data/detail_sample.csv"  # testing upload
 
-trips_df = pd.read_csv(trips_filename)
-detail_df = pd.read_csv(detail_filename)
+# trips_df = pd.read_csv(trips_filename)
+# detail_df = pd.read_csv(detail_filename)
+# end data local.
+
+
+# for web-hosting:
+trips_df = pd.read_csv("https://inf8808-vis-test.s3.amazonaws.com/web-hosting/trips_slim.csv")
+detail_df = pd.read_csv("https://inf8808-vis-test.s3.amazonaws.com/web-hosting/detail_sample.csv")   #very small file to test read only trips.
+# end for web hosting.
 
 trips_df_heat = preprocess.convert_dates(trips_df)
 trips_df_heat = preprocess.filter_years(trips_df_heat, 2011, 2021)  # to be used in region, harbour, vessel.
-
-
 
 #
 # debug start
@@ -60,9 +66,9 @@ most_used_vessel = trips_df_heat[["Vessel Type", "Id"]].groupby("Vessel Type"
 trip_duration = preprocess.get_trip_duration(trips_df_heat, total_voyage0)
 
 # region, harbour, vessel
-regions_sorted = sorted(detail_df.Region.unique())
+regions_sorted = sorted(trips_df_heat["Departure Region"].unique())
 vessel_type_sorted = sorted(trips_df_heat["Vessel Type"].unique())
-regions_harbours = detail_df[["Region","Hardour"]].groupby(["Region", "Hardour"]).count().reset_index()
+regions_harbours = preprocess.all_region_harbour(trips_df_heat)
 
 
 template.create_custom_theme()
@@ -101,13 +107,14 @@ feature_ops = dbc.RadioItems(
 
 # ----------------- app  ------------------------
 app = dash.Dash(__name__, suppress_callback_exceptions=True)
+server = app.server
+
 app.title = 'PROJECT | INF8808'
 
 
 app.layout = html.Div([
-    html.Header([
+    html.Div([
         html.H1('Maritime Traffic in Canada'),
-#        html.H2('From 2011 to 2021 ---- XPERT SOLUTIONS')
     ]),
 
     # dcc.Store stores the intermediate value
@@ -116,10 +123,10 @@ app.layout = html.Div([
 # panel summary
     html.Div([
         html.Div([
-            html.P(
-                "   Summary statistic of maritime traffic in Canada from 2011 to 2021.",
-                style={"font-size": "medium",
-                       "margin": "24px" },
+            html.H2(
+                "Summary statistic of maritime traffic in Canada from 2011 to 2021.",
+                style={
+                       "margin": "26px" },
             ),
             html.Div([
                     html.Div([
@@ -191,21 +198,7 @@ app.layout = html.Div([
                 "heigth": "100%",
                 "width": "100%"},
         ),
-
- # if come back to two columns in summary panel, uncomment below.
-        # html.Div([
-        #     html.Label(
-        #         "TEST TEST TEST",
-        #     ),
-        # ],
-        #     className="box",
-        #     style={"heigth": "100%",
-        #            "width": "50%",
-        #            },
-        # )
-    ],
-    #    className="row",
-    ),
+    ]),
 
 # feature / page selection buttons
 
@@ -237,24 +230,35 @@ def update_page(filter_chosen):
  # region page
     if filter_chosen == 0:
         return html.Div([
+
             html.Div([
-                html.Br(),
                 radio_trip_direction,
-                html.Br(),
-                html.Div([
-                    dcc.Graph(
-                        id='heatmap_region',
-                        figure={},
-                        className='graph',
-                        config=dict(
-                            scrollZoom=False,
-                            showTips=False,
-                            showAxisDragHandles=False,
-                            doubleClick=False,
-                            displayModeBar=False
-                        )
-                    ),
-                ]),
+
+                daq.ToggleSwitch(
+                    id='region-toggle',
+                    label='Daily or Monthly',
+                    labelPosition='bottom',
+                    color="#8BC8FF",
+                    value=False,
+                ),
+            ],
+                className='row',
+            ),
+
+            html.Div([
+            html.Div([
+                dcc.Graph(
+                    id='heatmap_region',
+                    figure={},
+                    className='graph',
+                    config=dict(
+                        scrollZoom=False,
+                        showTips=False,
+                        showAxisDragHandles=False,
+                        doubleClick=False,
+                        displayModeBar=False
+                    )
+                ),
             ],
                 className="box",
                 style={
@@ -266,20 +270,17 @@ def update_page(filter_chosen):
             ),
 
             html.Div([
-                html.Br(),
-                html.Div([
-                    dcc.Graph(
-                        id='line_region',
-                        className='graph',
-                        config=dict(
-                            scrollZoom=False,
-                            showTips=False,
-                            showAxisDragHandles=False,
-                            doubleClick=False,
-                            displayModeBar=False
-                        )
+                dcc.Graph(
+                    id='line_region',
+                    className='graph',
+                    config=dict(
+                        scrollZoom=False,
+                        showTips=False,
+                        showAxisDragHandles=False,
+                        doubleClick=False,
+                        displayModeBar=False
                     )
-                ])
+                )
             ],
                 className="box",
                 style={
@@ -289,33 +290,12 @@ def update_page(filter_chosen):
                     "width": "100%"
                 },
             ),
-
-            html.Div([
-                html.Br(),
-                html.Div([
-                    dcc.Graph(
-                        id='bar_region',
-                        className='graph',
-                        config=dict(
-                            scrollZoom=False,
-                            showTips=False,
-                            showAxisDragHandles=False,
-                            doubleClick=False,
-                            displayModeBar=False
-                        )
-                    )
-                ])
             ],
-                className="box",
-                style={
-                    "margin": "2px",
-                    "padding-top": "2px",
-                    "padding-bottom": "2px",
-                    "width": "100%"
-                },
-            ),
-
+                className='row'
+            )
         ])
+
+
     # harbour page
     elif filter_chosen == 1:
         return html.Div([
@@ -335,7 +315,8 @@ def update_page(filter_chosen):
                                 ]),
                             ],
                             className='box',
-                            style={"width": "50%"},
+                            style={"width": "40%",
+                                   "box-shadow": "0px 0px 0px #F9F9F8"},
                         ),
                         html.Div([
                                 html.Label('Select a harbour',
@@ -351,7 +332,20 @@ def update_page(filter_chosen):
                                 ]),
                             ],
                             className='box',
-                            style={"width": "50%"},
+                            style={"width": "40%",
+                                   "box-shadow": "0px 0px 0px #F9F9F8"},
+                        ),
+                        html.Div([
+                            daq.ToggleSwitch(
+                                id='harbour-toggle',
+                                label='Daily or Monthly',
+                                labelPosition='bottom',
+                                color="#8BC8FF",
+                                value=False,
+                            ),
+                        ],
+                           className='box',
+                            style={"box-shadow": "0px 0px 0px #F9F9F8"}
                         ),
                     ],
                         className="row",
@@ -359,40 +353,13 @@ def update_page(filter_chosen):
                             "padding-top": "8px",
                             "padding-bottom": "8px",},
                     ),
-
-                    html.Div([
-                        html.Div([
-                            dcc.Graph(
-                                id='bar_harbour_year',
-                                className='graph',
-                                figure={},
-                                config=dict(
-                                    scrollZoom=False,
-                                    showTips=False,
-                                    showAxisDragHandles=False,
-                                    doubleClick=False,
-                                    displayModeBar=False
-                                )
-                            ),
-                        ])
-                    ],
-                        className="box",
-                        style={
-                            "margin": "2px",
-                            "padding-top": "2px",
-                            "padding-bottom": "2px",
-                             "width": "100%",
-                               },
-                    )
-            ],
-#                className="row",
-            ),
+                ]),
 
             html.Div([
                 html.Div([
                     html.Div([
                         dcc.Graph(
-                            id='line_harbour',
+                            id='bar_harbour_year',
                             className='graph',
                             figure={},
                             config=dict(
@@ -417,7 +384,7 @@ def update_page(filter_chosen):
                 html.Div([
                     html.Div([
                         dcc.Graph(
-                            id='bar_harbour_month',
+                            id='line_harbour',
                             className='graph',
                             figure={},
                             config=dict(
@@ -435,13 +402,15 @@ def update_page(filter_chosen):
                         "margin": "2px",
                         "padding-top": "2px",
                         "padding-bottom": "2px",
-                        "width": "100%",
-                    },
+                         "width": "100%",
+                           },
                 ),
-
-            ]),
-
+            ],
+                className='row'
+            ),
         ])
+
+
     # vessel page
     elif filter_chosen == 2:
         return html.Div([
@@ -505,8 +474,7 @@ def update_page(filter_chosen):
                         className="box",
                         style={
                             "margin": "2px",
-                            "padding-top": "2px",
-                            # "padding-bottom": "2px",
+                            'background-color': '#ffffff',
                             "heigth": "100%",
                             "width": "34%",
                         },
@@ -514,9 +482,9 @@ def update_page(filter_chosen):
                 ],
                     className="row",
                 ),
-# Add an extra Div layer in case we want to move the heatmap to its own block.
-
         ])
+
+
     # voyage page
     else:
         return html.Div([
@@ -597,13 +565,12 @@ def update_region_heat(direction_chosen):
 
 # region page features: show line & bar
 @app.callback(
-    [Output('line_region', 'figure'),
-     Output('bar_region', 'figure'),
-     ],
+    Output('line_region', 'figure'),
     [Input('heatmap_region', 'clickData'),
-     Input('intermediate-value-region-trip-direction', 'data')]
+     Input('intermediate-value-region-trip-direction', 'data'),
+     Input('region-toggle', 'value')]
 )
-def region_heatmap_clicked(click_data, stored_direction):
+def region_heatmap_clicked(click_data, stored_direction, toggle_value):
     '''
         When a cell in the heatmap is clicked, updates the
         line chart to show the data for the corresponding
@@ -617,14 +584,10 @@ def region_heatmap_clicked(click_data, stored_direction):
             The necessary output values to update the line
             chart.
     '''
-    if click_data is None or click_data['points'][0]['z'] == 0:
-        line_fig_empty = line_charts.get_empty_figure()
-        # line_charts.add_rectangle_shape(line_fig_empty)
+    if click_data is None or not click_data['points'][0]['z']:
+        line_fig_empty = line_charts.get_empty_figure("region_page")
 
-        bar_fig_empty = bar_charts.get_empty_figure()
-    #    bar_charts.add_rectangle_shape(bar_fig_empty)
-
-        return line_fig_empty, bar_fig_empty
+        return line_fig_empty
 
     region = click_data['points'][0]['y']
     year = click_data['points'][0]['x']
@@ -632,30 +595,31 @@ def region_heatmap_clicked(click_data, stored_direction):
     get_dcc_store_direction = json.loads(stored_direction)
     #print("Inside heatmap_click | dcc stored radio button direction: ", get_dcc_store_direction)
 
-    # daily trip line chart
-    line_data = preprocess.get_data_by_freq(
-        trips_df_heat,
-        region,
-        year,
-        get_dcc_store_direction,
-        "daily"
-    )
+    if not toggle_value:
+        # daily trip line chart
+        line_data = preprocess.get_data_by_freq(
+            trips_df_heat,
+            region,
+            year,
+            get_dcc_store_direction,
+            "daily"
+        )
 
-    line_fig = line_charts.get_region_figure(line_data, region, year, get_dcc_store_direction)
+        my_fig = line_charts.get_region_figure(line_data, region, year, get_dcc_store_direction)
 
+    else:
+        # monthly trip bar chart
+        bar_data = preprocess.get_data_by_freq(
+            trips_df_heat,
+            region,
+            year,
+            get_dcc_store_direction,
+            "monthly"
+        )
 
-    # monthly trip bar chart
-    bar_data = preprocess.get_data_by_freq(
-        trips_df_heat,
-        region,
-        year,
-        get_dcc_store_direction,
-        "monthly"
-    )
+        my_fig = bar_charts.get_region_figure(bar_data, region, year, get_dcc_store_direction)
 
-    bar_fig = bar_charts.get_region_figure(bar_data, region, year, get_dcc_store_direction)
-
-    return line_fig, bar_fig
+    return my_fig
 
 
 # harbour page features: chained dropdown
@@ -687,7 +651,6 @@ def add_stack_bar(region, harbour):
 
     if not region or not harbour:
         bar_fig_empty = bar_charts.get_empty_figure()
-        # bar_charts.add_rectangle_shape(bar_fig_empty)
 
         return bar_fig_empty
 
@@ -708,14 +671,13 @@ def add_stack_bar(region, harbour):
 
 # harbour page features: click stack bar to show line daily & bar monthly
 @app.callback(
-    [Output('line_harbour', 'figure'),
-     Output('bar_harbour_month', 'figure'),
-     ],
+    Output('line_harbour', 'figure'),
     [Input('bar_harbour_year', 'clickData'),
      Input('region_selector', 'value'),
-     Input('harbour_selector', 'value')]
+     Input('harbour_selector', 'value'),
+     Input('harbour-toggle', 'value')]
 )
-def region_stack_bar_clicked(click_data, region_chosen, harbour_chosen):
+def region_stack_bar_clicked(click_data, region_chosen, harbour_chosen, toggle_value):
     '''
     curveNumber': 1, departure, the Radio Button value and the stack bar layers are inverse. confusing if use it.
     'curveNumber': 0, arrival
@@ -737,13 +699,9 @@ def region_stack_bar_clicked(click_data, region_chosen, harbour_chosen):
     directions = {"Departure":0, "Arrival":1}
 
     if click_data is None or not region_chosen or not harbour_chosen:
-        line_fig_empty = line_charts.get_empty_figure()
-        # line_charts.add_rectangle_shape(line_fig_empty)
+        line_fig_empty = line_charts.get_empty_figure("harbour_page")
 
-        bar_fig_empty = bar_charts.get_empty_figure()
-        # bar_charts.add_rectangle_shape(bar_fig_empty)
-
-        return line_fig_empty, bar_fig_empty
+        return line_fig_empty
     #
     # num_trips = click_data['points'][0]['y']
     year = click_data['points'][0]['x']
@@ -755,50 +713,51 @@ def region_stack_bar_clicked(click_data, region_chosen, harbour_chosen):
     #print("Inside stack_bar_click | region | harbour ", region_chosen, harbour_chosen)
 
 
+    if not toggle_value:
     # daily trip line chart
 
-    if trip_direction == 0: # departure
-        line_data = preprocess.get_depart_by_harbour(trips_df_heat, region_chosen, harbour_chosen)
-        line_data = preprocess.prepare_day_month_data_by_harbour(line_data, year, "daily")
+        if trip_direction == 0: # departure
+            line_data = preprocess.get_depart_by_harbour(trips_df_heat, region_chosen, harbour_chosen)
+            line_data = preprocess.prepare_day_month_data_by_harbour(line_data, year, "daily")
 
-    elif trip_direction == 1: # arrive
-        line_data = preprocess.get_arrive_by_harbour(trips_df_heat, region_chosen, harbour_chosen)
-        line_data = preprocess.prepare_day_month_data_by_harbour(line_data, year, "daily")
+        elif trip_direction == 1: # arrive
+            line_data = preprocess.get_arrive_by_harbour(trips_df_heat, region_chosen, harbour_chosen)
+            line_data = preprocess.prepare_day_month_data_by_harbour(line_data, year, "daily")
 
-    else:
-        print("wrong trip direction value")
-        return go.Figure(), go.Figure()
+        else:
+            print("wrong trip direction value")
+            return go.Figure(), go.Figure()
 
-    line_fig = line_charts.get_region_figure(line_data,
-                                             region_chosen,
-                                             year,
-                                             trip_direction,
-                                             harbour=harbour_chosen)
-
-
-    # monthly trip bar chart
-
-    if trip_direction == 0: # departure
-        bar_data = preprocess.get_depart_by_harbour(trips_df_heat, region_chosen, harbour_chosen)
-        bar_data = preprocess.prepare_day_month_data_by_harbour(bar_data, year, "monthly")
-
-    elif trip_direction == 1: # arrive
-        bar_data = preprocess.get_arrive_by_harbour(trips_df_heat, region_chosen, harbour_chosen)
-        bar_data = preprocess.prepare_day_month_data_by_harbour(bar_data, year, "monthly")
+        my_fig = line_charts.get_region_figure(line_data,
+                                                 region_chosen,
+                                                 year,
+                                                 trip_direction,
+                                                 harbour=harbour_chosen)
 
     else:
-        print("wrong trip direction value")
-        return go.Figure(), go.Figure()
+        # monthly trip bar chart
 
-    bar_fig = bar_charts.get_region_figure(bar_data,
-                                             region_chosen,
-                                             year,
-                                             trip_direction,
-                                             harbour=harbour_chosen)
+        if trip_direction == 0: # departure
+            bar_data = preprocess.get_depart_by_harbour(trips_df_heat, region_chosen, harbour_chosen)
+            bar_data = preprocess.prepare_day_month_data_by_harbour(bar_data, year, "monthly")
+
+        elif trip_direction == 1: # arrive
+            bar_data = preprocess.get_arrive_by_harbour(trips_df_heat, region_chosen, harbour_chosen)
+            bar_data = preprocess.prepare_day_month_data_by_harbour(bar_data, year, "monthly")
+
+        else:
+            print("wrong trip direction value")
+            return go.Figure(), go.Figure()
+
+        my_fig = bar_charts.get_region_figure(bar_data,
+                                                 region_chosen,
+                                                 year,
+                                                 trip_direction,
+                                                 harbour=harbour_chosen)
 
 
 
-    return line_fig, bar_fig
+    return my_fig
 
 
 # vessel page feature. show heatmap
@@ -837,7 +796,7 @@ def vessel_heatmap_clicked(click_data, vessel_chosen):
             The necessary output values to update the line
             chart.
     '''
-    if click_data is None or click_data['points'][0]['z'] == 0:
+    if click_data is None or not click_data['points'][0]['z']:
         dot_fig_empty = dot_charts.get_empty_figure()
         return dot_fig_empty
 
@@ -858,10 +817,6 @@ def vessel_heatmap_clicked(click_data, vessel_chosen):
 
 
     return fig_RHV
-
-
-
-
 
 
 

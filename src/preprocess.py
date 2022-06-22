@@ -172,6 +172,15 @@ def get_data_by_freq(dataframe, region, year, trip_direction, freq):
 
     return df_freq
 
+def all_region_harbour(dataframe):
+    deprhs = dataframe[["Departure Region", "Departure Hardour"]].groupby(
+        ["Departure Region", "Departure Hardour"]).count().reset_index()
+    arrvrhs = dataframe[["Arrival Region", "Arrival Hardour"]].groupby(
+        ["Arrival Region", "Arrival Hardour"]).count().reset_index()
+    deprhs.rename(columns={"Departure Region": "Region", "Departure Hardour": "Harbour"}, inplace=True)
+    arrvrhs.rename(columns={"Arrival Region": "Region", "Arrival Hardour": "Harbour"}, inplace=True)
+    rh = deprhs.append(arrvrhs)
+    return rh
 
 def get_depart_by_harbour(dataframe, region, harbour):
     # departure
@@ -223,7 +232,7 @@ def prepare_data_by_harbour(depart_hb_rg, arrv_hb_rg):
 
 
 def get_harbours_by_region(regions_harbours, region):
-    harbour_by_region = regions_harbours.loc[regions_harbours.Region == region]["Hardour"].unique()
+    harbour_by_region = regions_harbours.loc[regions_harbours.Region == region]["Harbour"].unique()
 
     return harbour_by_region
 
