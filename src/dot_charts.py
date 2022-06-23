@@ -1,24 +1,14 @@
-'''
-    Contains some functions related to the creation of the line chart.
-'''
+
 import plotly.graph_objects as go
 import plotly.express as px
 import hover_template
 import numpy as np
 
-from template import THEME
-
 
 def get_empty_figure():
     '''
-        Returns the figure to display when there is no data to show.
-
-        The text to display is : 'No data to display. Select a cell
-        in the heatmap for more information.
-
+    Returns the figure to display when there is no data to show.
     '''
-
-    # Construct the empty figure to display.
 
     fig = go.Figure()
     fig.update_layout(
@@ -43,10 +33,14 @@ def get_empty_figure():
 
 def get_vesselport_figure(dotplot_data, region, year):
     '''
-        Generates the dot chart using the given data.
+    Generates the dot plot using the given data.
+
+    Args:
+        A dataframe and necessary data to generate a dot plot.
+    Returns:
+        A figure based on input data.
 
     '''
-    # Construct the required figure.
 
     fig_VRH = px.scatter(dotplot_data, x="Counts", y="Harbour",
                          title=f"{region} in {year}",

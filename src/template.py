@@ -53,7 +53,7 @@ def create_custom_theme():
 
     pio.templates['new_theme'] = go.layout.Template(
         layout=go.Layout(
-            title_font_size=22,
+            title_font_size=18,
             # font_color=THEME["dark_color"],
             # font_family=THEME["font_family"],
             # plot_bgcolor=THEME["background_color"],

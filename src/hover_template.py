@@ -76,15 +76,13 @@ def get_singlebar_hover_template():
 
 def get_stackbar_hover_template():
     '''
-        Sets the template for the hover tooltips in the heatmap.
+    template for the hover tooltips.
 
-        Contains two labels, followed by their corresponding
-        value, separated by a colon : date and trees planted.
+    Direction of the trip
+    Number of trips
+    % of total voyages in a region/harbour
 
-        The labels are font 'Roboto Slab' and bold. The values
-        are font 'Roboto' and regular weight.
     '''
-    # Define and return the hover template
 
     hovertext = [
             "<span style='font-family:Open Sans'> <b>Direction: </b>%{customdata[0]}</span>",

@@ -22,27 +22,27 @@ import plotly.graph_objects as go
 
 import template
 import preprocess
-import heatmap, line_charts, bar_charts, hover_template, dot_charts
+import heatmap, line_charts, bar_charts, hover_template, dot_charts, passage_map
 #
 #
-# When data is local, read and process original trip file.
+# Read: When data is local, read and process original trip file.
 # trips_filename = "./assets/data/TRIP_NEW.csv"
 # detail_filename = "./assets/data/TRIP_DETAIL_NEW.csv"
-## or read from a smaller file saved the processed file (get rid of the columns we do not use)
-# trips_filename = "./assets/data/trips_slim.csv"
+# or read from a smaller file (get rid of the columns we do not use)
+# trips_filename = "./assets/data/trips_slim0.csv"
 # detail_filename = "./assets/data/detail_sample.csv"  # testing upload
 
-# trips_df = pd.read_csv(trips_filename)
+# trips_df_heat = pd.read_csv(trips_filename)
 # detail_df = pd.read_csv(detail_filename)
-# end data local.
+# end Read data local.
 
 
 # for web-hosting:
-trips_df = pd.read_csv("https://inf8808-vis-test.s3.amazonaws.com/web-hosting/trips_slim.csv")
-detail_df = pd.read_csv("https://inf8808-vis-test.s3.amazonaws.com/web-hosting/detail_sample.csv")   #very small file to test read only trips.
+trips_df_heat = pd.read_csv("https://inf8808-vis-test.s3.amazonaws.com/web-hosting/trips_slim.csv")
+detail_df = pd.read_csv("https://inf8808-vis-test.s3.amazonaws.com/web-hosting/detail_sample.csv")
 # end for web hosting.
 
-trips_df_heat = preprocess.convert_dates(trips_df)
+trips_df_heat = preprocess.convert_dates(trips_df_heat)
 trips_df_heat = preprocess.filter_years(trips_df_heat, 2011, 2021)  # to be used in region, harbour, vessel.
 
 #
@@ -68,7 +68,6 @@ trip_duration = preprocess.get_trip_duration(trips_df_heat, total_voyage0)
 # region, harbour, vessel
 regions_sorted = sorted(trips_df_heat["Departure Region"].unique())
 vessel_type_sorted = sorted(trips_df_heat["Vessel Type"].unique())
-regions_harbours = preprocess.all_region_harbour(trips_df_heat)
 
 
 template.create_custom_theme()
@@ -126,7 +125,7 @@ app.layout = html.Div([
             html.H2(
                 "Summary statistic of maritime traffic in Canada from 2011 to 2021.",
                 style={
-                       "margin": "26px" },
+                       "margin-left": "4%" },
             ),
             html.Div([
                     html.Div([
@@ -497,9 +496,9 @@ def update_page(filter_chosen):
 
                     html.Div([
                         html.Div([
-                            dcc.Input(id="trip_input", type="text",
-                                      value="2079000000818245",
-                                      placeholder="string",
+                            dcc.Input(id="trip_input", type="number",
+                                      value=2079000000818245,
+                                      placeholder="digits",
                                       debounce=True),
                         ]),
                         html.Br(),
@@ -539,20 +538,26 @@ def update_page(filter_chosen):
                 ),
             ],
             ),
-            # we have an extra Div layer in case new graph box is needed, clean up later.
-
+            # we have an extra Div layer in case new graph box is needed.
         ])
 
 
 # region page features: show heatmap
 @app.callback(
-    [Output("heatmap_region", "figure"),
-     Output('intermediate-value-region-trip-direction', 'data'),
-     ],
+    Output("heatmap_region", "figure"),
     [Input("trip_direction", "value")],
 )
 def update_region_heat(direction_chosen):
-    #print("output to heat, direction_chosen: ", direction_chosen)
+    '''
+        Display a heatmap based on radio button value.
+
+        Args:
+            The radio button value indicating trip directions. default to 0,
+            means departure.
+        Returns:
+            The necessary output values to update the heatmap.
+
+    '''
 
     yearly_df = preprocess.summarize_yearly_counts(trips_df_heat, direction_chosen)  # 0 means Departure
     data = preprocess.restructure_df(yearly_df)
@@ -560,31 +565,30 @@ def update_region_heat(direction_chosen):
 
     region_heat_fig = heatmap.get_figure(data, direction_chosen, total_voyage0)
 
-    return region_heat_fig, json.dumps(direction_chosen)
+    return region_heat_fig
 
 
-# region page features: show line & bar
+# region page features: show line or bar
 @app.callback(
     Output('line_region', 'figure'),
     [Input('heatmap_region', 'clickData'),
-     Input('intermediate-value-region-trip-direction', 'data'),
+     Input("trip_direction", "value"),
      Input('region-toggle', 'value')]
 )
 def region_heatmap_clicked(click_data, stored_direction, toggle_value):
     '''
         When a cell in the heatmap is clicked, updates the
-        line chart to show the data for the corresponding
+        line or bar chart shows the data for the corresponding
         region & year. If there is no data to show,
-        displays a message.
+        displays a message. The toggle selects line or bar charts.
 
         Args:
-            The necessary inputs and states to update the
-            line chart.
+            The necessary inputs to update the line or bar chart.
         Returns:
-            The necessary output values to update the line
+            The necessary output values to update the line or bar
             chart.
     '''
-    if click_data is None or not click_data['points'][0]['z']:
+    if click_data is None or click_data['points'][0]['z'] == None:
         line_fig_empty = line_charts.get_empty_figure("region_page")
 
         return line_fig_empty
@@ -592,20 +596,17 @@ def region_heatmap_clicked(click_data, stored_direction, toggle_value):
     region = click_data['points'][0]['y']
     year = click_data['points'][0]['x']
 
-    get_dcc_store_direction = json.loads(stored_direction)
-    #print("Inside heatmap_click | dcc stored radio button direction: ", get_dcc_store_direction)
-
     if not toggle_value:
         # daily trip line chart
         line_data = preprocess.get_data_by_freq(
             trips_df_heat,
             region,
             year,
-            get_dcc_store_direction,
+            stored_direction,
             "daily"
         )
 
-        my_fig = line_charts.get_region_figure(line_data, region, year, get_dcc_store_direction)
+        my_fig = line_charts.get_region_figure(line_data, region, year, stored_direction)
 
     else:
         # monthly trip bar chart
@@ -613,11 +614,11 @@ def region_heatmap_clicked(click_data, stored_direction, toggle_value):
             trips_df_heat,
             region,
             year,
-            get_dcc_store_direction,
+            stored_direction,
             "monthly"
         )
 
-        my_fig = bar_charts.get_region_figure(bar_data, region, year, get_dcc_store_direction)
+        my_fig = bar_charts.get_region_figure(bar_data, region, year, stored_direction)
 
     return my_fig
 
@@ -628,7 +629,16 @@ def region_heatmap_clicked(click_data, stored_direction, toggle_value):
     [Input('region_selector', 'value')],
 )
 def set_harbour_options(region_chosen):
-    #print(region_chosen)
+    '''
+        Dropdowns to select Region and Harbour. The harbour download is populated based on
+        the Region value.
+
+        Args:
+            The dropdown indicates a Region, defaults to "Pacific Region".
+        Returns:
+            The necessary output values to update the harbour dropdown.
+    '''
+    regions_harbours = preprocess.all_region_harbour(trips_df_heat)
     harbours = preprocess.get_harbours_by_region(regions_harbours, region_chosen)
 
     return [{'label': x, 'value': x} for x in harbours]
@@ -641,10 +651,17 @@ def set_harbour_options(region_chosen):
      Input('harbour_selector', 'value')]
 )
 def add_stack_bar(region, harbour):
+    '''
+        Display a stacked bar based on the input value from Region and Harbour dropdowns.
+
+        Args:
+            The dropdowns indicate a Region and a harbour in the region.
+        Returns:
+            The necessary output values to update the stacked bar.
+    '''
 
     ctx = dash.callback_context
     my_trigger = ctx.triggered
-  #  print(my_trigger)
 
     if my_trigger[0]['prop_id'] == "region_selector.value":
         harbour= None
@@ -669,7 +686,7 @@ def add_stack_bar(region, harbour):
     return stack_bar_fig
 
 
-# harbour page features: click stack bar to show line daily & bar monthly
+# harbour page features: click stack bar to show line daily or bar monthly
 @app.callback(
     Output('line_harbour', 'figure'),
     [Input('bar_harbour_year', 'clickData'),
@@ -679,12 +696,17 @@ def add_stack_bar(region, harbour):
 )
 def region_stack_bar_clicked(click_data, region_chosen, harbour_chosen, toggle_value):
     '''
-    curveNumber': 1, departure, the Radio Button value and the stack bar layers are inverse. confusing if use it.
-    'curveNumber': 0, arrival
-    x: year
-    y: number of trips
+        When a section of a stack bar is clicked, updates the
+        line or bar chart to show the data for the corresponding
+        harbour & year. If there is no data to show, displays a message.
+        The toggle selects line or bar charts.
+
+        Args:
+            The necessary inputs to update the line or bar chart.
+        Returns:
+            The necessary output values to update the line or bar
+            chart.
     '''
-   # print(f'click data: {click_data}')
 
     ctx = dash.callback_context
     my_trigger = ctx.triggered
@@ -693,8 +715,6 @@ def region_stack_bar_clicked(click_data, region_chosen, harbour_chosen, toggle_v
     if my_trigger[0]['prop_id'] == "region_selector.value" or my_trigger[0]['prop_id'] == "harbour_selector.value":
         harbour_chosen = None
         click_data = None
-    #    print("click data should be None")
-
 
     directions = {"Departure":0, "Arrival":1}
 
@@ -705,13 +725,8 @@ def region_stack_bar_clicked(click_data, region_chosen, harbour_chosen, toggle_v
     #
     # num_trips = click_data['points'][0]['y']
     year = click_data['points'][0]['x']
-   # trip_direction = click_data["points"][0]["curveNumber"]  # the value is reverse from radio button.
     direction = click_data["points"][0]["customdata"][0]
     trip_direction = directions[direction]
-
-
-    #print("Inside stack_bar_click | region | harbour ", region_chosen, harbour_chosen)
-
 
     if not toggle_value:
     # daily trip line chart
@@ -756,7 +771,6 @@ def region_stack_bar_clicked(click_data, region_chosen, harbour_chosen, toggle_v
                                                  harbour=harbour_chosen)
 
 
-
     return my_fig
 
 
@@ -766,6 +780,15 @@ def region_stack_bar_clicked(click_data, region_chosen, harbour_chosen, toggle_v
     [Input("vessel_selector", "value")],
 )
 def updape_heat_by_vessel(vessel_chosen):
+    '''
+        Based on the vessel type indicated by the dropdown,
+        display all trips using the type of vessel on a heatmap.
+
+        Args:
+            A value indicates a vessel type.
+        Returns:
+            A heatmap shows all trips using the type of vessel.
+    '''
     trip_direction = 2  # display depart + arrive
 
     # filter by vessel type, vessel_chosen can never be None, controled by Dash.
@@ -784,26 +807,31 @@ def updape_heat_by_vessel(vessel_chosen):
 )
 def vessel_heatmap_clicked(click_data, vessel_chosen):
     '''
+        The heatmap displays all trips using a type of vessel.
         When a cell in the heatmap is clicked, updates the
-        line chart to show the data for the corresponding
-        region & year. If there is no data to show,
-        displays a message.
+        dot plot to show the distribution of trips in harbour for
+        a region & year. If there is no data to show,
+        displays a message. If vessel type changes, display a message.
 
         Args:
-            The necessary inputs and states to update the
-            line chart.
+            The necessary input to update the dot plot.
         Returns:
-            The necessary output values to update the line
-            chart.
+            The necessary output values to update the dot plot.
     '''
-    if click_data is None or not click_data['points'][0]['z']:
+    ctx = dash.callback_context
+    my_trigger = ctx.triggered
+
+    if my_trigger[0]["prop_id"] == "vessel_selector.value":
+        click_data = None
+
+    if click_data is None or click_data['points'][0]['z'] == None:
         dot_fig_empty = dot_charts.get_empty_figure()
         return dot_fig_empty
 
     region = click_data['points'][0]['y']
     year = click_data['points'][0]['x']
 
-    # vessel usage in a harbour dot plot
+    # vessel usage in harbours dot plot
     dotplot_data = preprocess.get_vessel_harbour(
         trips_df_heat,
         vessel_chosen,
@@ -811,47 +839,45 @@ def vessel_heatmap_clicked(click_data, vessel_chosen):
         year
     )
 
-  #  print(region, year, vessel_chosen, dotplot_data.head())
-
-    fig_RHV = dot_charts.get_vesselport_figure(dotplot_data, region, year)
+    if dotplot_data.shape:
+        fig_RHV = dot_charts.get_vesselport_figure(dotplot_data, region, year)
+    else:
+        fig_RHV = dot_charts.get_empty_figure()
 
 
     return fig_RHV
 
 
 
-# voyga page features. if trip Id is incorrect. the map is blank, should return a message.
+# voyga page features. if trip Id is incorrect. the map is blank with a message.
 @app.callback(
     [Output("trip_passage","figure"),
     Output("trip_input", "pattern")],
     [Input("trip_input", "value")],
 )
 def retrieve_passage(trip_id):
-    pattern = trip_id
+    '''
+    display all the passages of a trip on a map.
 
-    trip_id = int(trip_id)
+        Args:
+            A trip Id. If the Id is incorrect, display a message.
+        Returns:
+            A map showing the itinerary of a trip.
+    '''
+
+    pattern = str(trip_id)
+
+    trip_id = trip_id
     atrip = detail_df.loc[detail_df.Id == trip_id]  # all ids in trip.csv are in detail_trip.csv
 
     if atrip.empty:
         pattern = pattern + "_invalid"
 
-    lats = atrip.Latitude
-    longs = atrip.Longitude
-    fig = px.scatter_mapbox(atrip, lat=lats, lon=longs,
-                            hover_data=[atrip["Event Type"], atrip["Rank Number"], atrip.Hardour,
-                                        atrip.Region],
-                            zoom=5
-                            )
-    fig.update_layout(mapbox_style="carto-positron"  # "stamen-toner",
-                      )
+        return passage_map.get_empty_figure(), pattern
 
-    fig.update_traces(mode="lines+markers")
+    else:
+        fig = passage_map.get_passage_map(atrip)
 
-    fig.update_traces(
-        hovertemplate=hover_template.get_map_hover_template()
-    )
-
-    fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
 
     return fig, pattern
 
