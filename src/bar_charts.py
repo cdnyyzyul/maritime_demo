@@ -1,6 +1,4 @@
-'''
-    Contains some functions related to the creation of the line chart.
-'''
+
 import plotly.express as px
 import plotly.graph_objects as go
 import hover_template
@@ -10,14 +8,9 @@ from template import THEME
 
 def get_empty_figure():
     '''
-        Returns the figure to display when there is no data to show.
-
-        The text to display is : 'No data to display. Select a cell
-        in the heatmap for more information.
+    Returns the figure when there is no data to show.
 
     '''
-
-    # Construct the empty figure to display.
 
     fig = go.Figure()
     fig.update_layout(
@@ -42,28 +35,19 @@ def get_empty_figure():
 
 def get_region_figure(bar_data, region, year, trip_direction, harbour=""):
     '''
-        Generates the line chart using the given data.
-
-        The ticks must show the zero-padded day and
-        abbreviated month. The y-axis title should be 'Trees'
-        and the title should indicated the displayed
-        neighborhood and year.
-
-        In the case that there is only one data point,
-        the trace should be displayed as a single
-        point instead of a line.
+    Generates a bar chart using the given data.
 
         Args:
-            line_data: The data to display in the
-            line chart
+            bar_data: The data to display
             region: The selected region
             year: The selected year
+            trip_direction: departure, arrival or both
+            harbour: name of a harbour, default to empty string
         Returns:
-            The figure to be displayed
+            A figure to be displayed
     '''
-    # Construct the required figure. Don't forget to include the hover template
 
-    total_counts = bar_data.Counts.sum()  # %
+    total_counts = bar_data.Counts.sum()  #  to calculate %
     fig = go.Figure()
     fig.add_trace(go.Bar(x=bar_data.Date, y=bar_data.Counts,
                          customdata = round(bar_data.Counts / total_counts * 100, 2)  # %
@@ -104,6 +88,17 @@ def get_region_figure(bar_data, region, year, trip_direction, harbour=""):
 
 
 def get_harbour_figure_year(stack_bar_data, region, harbour):
+    '''
+    Generates a stacked bar chart using the given data.
+
+        Args:
+            stack_bar_data: The data to display
+            region: The selected region
+            harbour: name of a harbour, default to empty string
+        Returns:
+            A figure to be displayed
+    '''
+
     total_counts = stack_bar_data.Counts.sum()
     fig = px.bar(stack_bar_data, x=stack_bar_data.Date.dt.year, y="Counts",
                  color="Direction",

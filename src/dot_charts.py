@@ -37,6 +37,8 @@ def get_vesselport_figure(dotplot_data, region, year):
 
     Args:
         A dataframe and necessary data to generate a dot plot.
+        region name
+        year
     Returns:
         A figure based on input data.
 

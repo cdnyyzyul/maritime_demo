@@ -6,7 +6,7 @@ import hover_template
 
 def get_empty_figure():
     '''
-        Returns the figure to display when there is no data to show.
+        Returns the figure when there is no data to show.
     '''
 
     fig = go.Figure()
@@ -32,7 +32,7 @@ def get_empty_figure():
 
 def get_passage_map(atrip):
     '''
-    Generates a map showing the itinerary of atrip.
+    Generates a map showing the itinerary of a trip.
 
     Args:
         A dataframe of a trip.

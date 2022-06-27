@@ -1,6 +1,4 @@
-'''
-    Contains some functions related to the creation of the line chart.
-'''
+
 import plotly.graph_objects as go
 import hover_template
 
@@ -9,19 +7,13 @@ from template import THEME
 
 def get_empty_figure(page):
     '''
-        Returns the figure to display when there is no data to show.
-
-        The text to display is : 'No data to display. Select a cell
-        in the heatmap for more information.
+    Returns the figure when there is no data to show.
 
     '''
     text_info = {
         "region_page": "Select a cell in the heatmap<br>use the toggle to show daily or monthly voyages.",
         "harbour_page": "Click on a stacked bar<br>use the toggle to show daily or monthly voyages."
     }
-
-
-    # Construct the empty figure to display.
 
     fig = go.Figure()
     fig.update_layout(
@@ -45,26 +37,17 @@ def get_empty_figure(page):
 
 def get_region_figure(line_data, region, year, trip_direction, harbour=""):
     '''
-        Generates the line chart using the given data.
-
-        The ticks must show the zero-padded day and
-        abbreviated month. The y-axis title should be 'Trees'
-        and the title should indicated the displayed
-        neighborhood and year.
-
-        In the case that there is only one data point,
-        the trace should be displayed as a single
-        point instead of a line.
+    Generates a line chart using the given data.
 
         Args:
-            line_data: The data to display in the
-            line chart
+            line_data: The data to display
             region: The selected region
             year: The selected year
+            trip_direction: departure, arrival or both
+            harbour: name of a harbour, default to empty string
         Returns:
-            The figure to be displayed
+            A figure to be displayed
     '''
-    # Construct the required figure. Don't forget to include the hover template
 
     total_counts = line_data.Counts.sum()
     fig = go.Figure()

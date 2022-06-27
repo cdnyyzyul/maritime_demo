@@ -1,6 +1,4 @@
-'''
-    Contains some functions related to the creation of the heatmap.
-'''
+
 import plotly.express as px
 import plotly.graph_objects as go
 from template import THEME
@@ -10,32 +8,27 @@ import numpy as np
 
 def get_figure(data, direction, total_voyage):
     '''
-        Generates the heatmap from the given dataset.
+    Generates a heatmap from the given dataset.
 
-        Make sure to set the title of the color bar to 'Trees'
-        and to display each year as an x-tick.
-
-        Args:
-            data: The data to display
-        Returns:
-            The figure to be displayed.
+    Args:
+        data: The data to display
+        direction: departure, arrival or both
+        total_voyage: total number of voyage
+    Returns:
+        The figure to be displayed.
     '''
 
-    # Create the heatmap.
+    # reverse the dataframe (shape: 9*11) before creating the heatmap. Plot uses reverse older.
     data = data[::-1]
     xticklabel = [i.year for i in data.columns]
     yticklabel = data.index
 
-    # fig = px.imshow(data,
-    #                 labels=dict(x="", y="", color="Voyage"),
-    #                 x=xticklabel,
-    #                 y=yticklabel
-    #                 )
+
     fig = go.Figure(data=go.Heatmap(
         z=np.log10(data),
         x=xticklabel,
         y=yticklabel,
-        colorbar_title="Voyage",
+        colorbar_title="Voyage<br>(powers of 10)",
         customdata=round(data / total_voyage * 100, 2),
         text = data
     ))

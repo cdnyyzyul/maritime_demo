@@ -1,20 +1,17 @@
 '''
-    Provides the templates for the tooltips.
+    templates for the tooltips.
 '''
-
 
 def get_heatmap_hover_template():
     '''
-        Sets the template for the hover tooltips in the heatmap.
+    template for the hover tooltips in the heatmap.
+    the tooltip includes:
+        Region name
+        year
+        Voyage: number of voyage
+        %:  (number of voyage in a region in a year) / (total voyage)
 
-        Contains three labels, followed by their corresponding
-        value, separated by a colon : neighborhood, year and
-        trees planted.
-
-        The labels are font 'Roboto Slab' and bold. The values
-        are font 'Roboto' and regular weight.
     '''
-    # Define and return the hover template
 
     hovertext = [
             "<span style='font-family:Open Sans; font-size:16px'> <b>Region: </b>%{y}</span>",
@@ -30,15 +27,12 @@ def get_heatmap_hover_template():
 
 def get_linechart_hover_template():
     '''
-        Sets the template for the hover tooltips in the heatmap.
-
-        Contains two labels, followed by their corresponding
-        value, separated by a colon : date and trees planted.
-
-        The labels are font 'Roboto Slab' and bold. The values
-        are font 'Roboto' and regular weight.
+    template for the hover tooltips of line charts.
+    the tooltip includes:
+        Date
+        voyage: Number of voyage
+        %: (number of voyage in a day) / (total voyages in a region/harbour in that year)
     '''
-    # Define and return the hover template
 
     hovertext = [
             "<span style='font-family:Open Sans'> <b>Date: </b>%{x}</span>",
@@ -53,15 +47,12 @@ def get_linechart_hover_template():
 
 def get_singlebar_hover_template():
     '''
-        Sets the template for the hover tooltips in the heatmap.
-
-        Contains two labels, followed by their corresponding
-        value, separated by a colon : date and trees planted.
-
-        The labels are font 'Roboto Slab' and bold. The values
-        are font 'Roboto' and regular weight.
+    template for hover tooltip of single bar charts.
+    the tooltip includes:
+        Month
+        voyage: Number of voyage
+        %: (number of voyage in a month) / (total voyages in a region/harbour in that year)
     '''
-    # Define and return the hover template
 
     hovertext = [
             "<span style='font-family:Open Sans'> <b>Month: </b>%{x}</span>",
@@ -76,11 +67,13 @@ def get_singlebar_hover_template():
 
 def get_stackbar_hover_template():
     '''
-    template for the hover tooltips.
+    template for hover tooltip of the stacked bar chart.
+    the tooltip includes:
 
-    Direction of the trip
-    Number of trips
-    % of total voyages in a region/harbour
+        Direction of the trip
+        Year
+        voyage: Number of voyage
+        %:  (number of voyage in a region & harbour in a year) / (total of voyage)
 
     '''
 
@@ -98,7 +91,18 @@ def get_stackbar_hover_template():
 
 def get_map_hover_template():
 
-    # Define and return the hover template
+    '''
+    template for hover tooltip of the itinerary map.
+    the tooltip includes:
+
+        Region name
+        Harbour name
+        Event type: e.g. departure, arrival, CIP passage
+        Direction of the trip
+        Latitude of the event
+        Longitude of the event
+
+    '''
 
     hovertext = [
             "<span style='font-family:Open Sans'> <b>Region: </b>%{customdata[1]}</span>",
@@ -115,8 +119,12 @@ def get_map_hover_template():
 
 
 def get_vesselport_hover_template():
-
-    # Define and return the hover template
+    '''
+    template for hover tooltip of the dot plot.
+    the tooltip includes:
+        Harbour name
+        voyage: Number of voyage
+    '''
 
     hovertext = [
             "<span style='font-family:Open Sans'> <b>Harbour: </b>%{y}</span>",

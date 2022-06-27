@@ -1,21 +1,19 @@
-'''
-    Contains some functions to preprocess the data used in the visualisation.
-'''
+
 import pandas as pd
 import warnings
 warnings.filterwarnings("ignore")
-#from datetime import date
+
 
 def convert_dates(dataframe):
     '''
-        Converts the dates in the dataframe to datetime objects.
+    Converts the dates in the dataframe to datetime objects.
 
-        Args:
-            dataframe: The dataframe to process
-        Returns:
-            The processed dataframe with datetime-formatted dates.
+    Args:
+        dataframe: The dataframe to process
+    Returns:
+        The processed dataframe with datetime-formatted dates.
     '''
-    # Convert dates
+
     my_df = dataframe[['Id',
                        'Departure Date', 'Departure Hardour', 'Departure Region',
                        'Arrival Date', 'Arrival Hardour', 'Arrival Region', 'Vessel Type']]
@@ -26,17 +24,17 @@ def convert_dates(dataframe):
 
 def filter_years(dataframe, start, end):
     '''
-        Filters the elements of the dataframe by date, making sure
-        they fall in the desired range.
+    Filters the elements of the dataframe by date, making sure
+    they fall in the desired range.
 
-        Args:
-            dataframe: The dataframe to process
-            start: The starting year (inclusive)
-            end: The ending year (inclusive)
-        Returns:
-            The dataframe filtered by date.
+    Args:
+        dataframe: The dataframe to process
+        start: The starting year (inclusive)
+        end: The ending year (inclusive)
+    Returns:
+        The dataframe filtered by date.
     '''
-    # Filter by dates
+
     gt_start_depart = dataframe["Departure Date"].dt.year >= start
     lt_end_depart = dataframe["Departure Date"].dt.year <= end
     start_end_depart = gt_start_depart & lt_end_depart
@@ -52,23 +50,20 @@ def filter_years(dataframe, start, end):
 
 def summarize_yearly_counts(dataframe, trip_direction):
     '''
-        Groups the data by neighborhood and year,
-        summing the number of trees planted in each neighborhood
-        each year.
+    Summarize the data by region and year.
 
-        Args:
-            dataframe: The dataframe to process
-            trip_direction: departure, arrival, total, 0,1,2
-        Returns:
-            The processed dataframe with column 'Counts'
-            containing the counts of planted
-            trees for each neighborhood each year.
+    Args:
+        dataframe: The dataframe to process
+        trip_direction: departure, arrival, both, 0,1,2
+    Returns:
+        The processed dataframe with column 'Counts'
+        containing the number of voyage.
+
     '''
-    # Summarize df
 
     my_df = dataframe.copy()
     if trip_direction == 0:
-        # group by year_end on the column "Departure Date", keep Departure Region, no Hardour but vessel page may need it.
+        # group by year_end on the column "Departure Date", keep Departure Region.
         my_df = my_df.groupby([pd.Grouper(key="Departure Date", freq="1Y"),
                                "Departure Region"]).agg(Counts=pd.NamedAgg(column="Departure Region", aggfunc="count"))
     elif trip_direction == 1:
@@ -94,23 +89,14 @@ def summarize_yearly_counts(dataframe, trip_direction):
 
 def restructure_df(yearly_df):
     '''
-        Restructures the dataframe into a format easier
-        to be displayed as a heatmap.
+    Restructures the dataframe into a format to be displayed as a heatmap.
+    dataframe has index = region, columns = each year.
 
-        The resulting dataframe should have as index
-        the names of the neighborhoods, while the columns
-        should be each considered year. The values
-        in each cell represent the number of trees
-        planted by the given neighborhood the given year.
-
-        Any empty cells are filled with zeros.
-
-        Args:
-            yearly_df: The dataframe to process
-        Returns:
-            The restructured dataframe
+    Args:
+        yearly_df: The dataframe to process
+    Returns:
+        The restructured dataframe
     '''
-    # Restructure df and fill empty cells with 0
 
     my_df = yearly_df.unstack().transpose()
     my_df.rename(columns=lambda i: i.date(), inplace=True)
@@ -122,19 +108,20 @@ def restructure_df(yearly_df):
 
 def get_data_by_freq(dataframe, region, year, trip_direction, freq):
     '''
-        From the given dataframe, gets
-        the daily amount of planted trees
-        in the given neighborhood and year.
+    gets the amount of daily or monthly voyages in a given region and year.
 
-        Args:
-            dataframe: The dataframe to process
-            arrond: The desired neighborhood
-            year: The desired year
-        Returns:
-            The daily tree count data for that
-            neighborhood and year.
+    Args:
+        dataframe: The dataframe to process
+        region: name
+        year: year
+        trip_direction: departure, arrival or both (0,1,2)
+        freq: daily or monthly
+    Returns:
+        The number of voyage defined by the parameters.
+
     '''
-    # define the frequency for daily and monthly.
+
+    # define the options of frequency:  daily and monthly.
     frequencies = {"daily" : "1D", "monthly": "MS"}
     interval = frequencies[freq]
 
@@ -172,7 +159,18 @@ def get_data_by_freq(dataframe, region, year, trip_direction, freq):
 
     return df_freq
 
+
 def all_region_harbour(dataframe):
+    '''
+    Extract regions and the harbours in each region.
+
+    Args:
+        dataframe: The dataframe to process
+    Returns:
+        dataframe contains region and harbours.
+
+    '''
+
     deprhs = dataframe[["Departure Region", "Departure Hardour"]].groupby(
         ["Departure Region", "Departure Hardour"]).count().reset_index()
     arrvrhs = dataframe[["Arrival Region", "Arrival Hardour"]].groupby(
@@ -180,10 +178,23 @@ def all_region_harbour(dataframe):
     deprhs.rename(columns={"Departure Region": "Region", "Departure Hardour": "Harbour"}, inplace=True)
     arrvrhs.rename(columns={"Arrival Region": "Region", "Arrival Hardour": "Harbour"}, inplace=True)
     rh = deprhs.append(arrvrhs)
+
     return rh
 
+
 def get_depart_by_harbour(dataframe, region, harbour):
-    # departure
+    '''
+    Extract departures in a harbour of a region.
+
+    Args:
+        dataframe: The dataframe to process
+        region: name
+        harbour: name
+    Returns:
+        dataframe contains departures from the harbour of the region.
+
+    '''
+
     depart_hb_rg = dataframe.loc[(dataframe["Departure Region"] == region) &
                                      (dataframe["Departure Hardour"] == harbour)]
     depart_hb_rg = depart_hb_rg[['Id', 'Departure Date']]
@@ -194,7 +205,18 @@ def get_depart_by_harbour(dataframe, region, harbour):
 
 
 def get_arrive_by_harbour(dataframe, region, harbour):
-    # arrival
+    '''
+    Extract arrivals in a harbour of a region.
+
+    Args:
+        dataframe: The dataframe to process
+        region: name
+        harbour: name
+    Returns:
+        dataframe contains arrivals in the harbour of the region.
+
+    '''
+
     arrv_hb_rg = dataframe.loc[(dataframe["Arrival Region"] == region) &
                                    (dataframe["Arrival Hardour"] == harbour)]
     arrv_hb_rg = arrv_hb_rg[['Id', 'Arrival Date']]
@@ -203,7 +225,19 @@ def get_arrive_by_harbour(dataframe, region, harbour):
 
     return arrv_hb_rg
 
+
 def prepare_day_month_data_by_harbour(dataframe, year, freq):
+    '''
+    Summarize the number of daily or monthly voyages.
+
+    Args:
+        dataframe: The dataframe to process
+        year
+        freq: daily or monthly
+    Returns:
+        dataframe contains the number of daily or monthly voyage.
+
+    '''
 
     frequencies = {"daily" : "1D", "monthly": "MS"}
     interval = frequencies[freq]
@@ -216,11 +250,18 @@ def prepare_day_month_data_by_harbour(dataframe, year, freq):
     return harb_data
 
 
-
-
 def prepare_data_by_harbour(depart_hb_rg, arrv_hb_rg):
+    '''
+    Summarize both departure and arrivals in a harbour of a region.
 
-    # all trips
+    Args:
+        depart_hb_rg: dataframe contains departures in a harbour of a region
+        arrv_hb_rg: dataframe contains arrivals in the same harbour
+    Returns:
+        dataframe contains voyages in the harbour of the region.
+
+    '''
+
     trip_hb_rg = depart_hb_rg.append(arrv_hb_rg)
 
     stack_bar_data = trip_hb_rg.groupby([pd.Grouper(key="Date", freq="1YS"), "Direction"]
@@ -230,14 +271,35 @@ def prepare_data_by_harbour(depart_hb_rg, arrv_hb_rg):
     return stack_bar_data
 
 
-
 def get_harbours_by_region(regions_harbours, region):
+    '''
+    Extract all harbours of one region.
+
+    Args:
+        regions_harbours: dataframe contains all the harbours in all regions
+        region: name
+    Returns:
+        dataframe contains harbours in one region.
+
+    '''
+
     harbour_by_region = regions_harbours.loc[regions_harbours.Region == region]["Harbour"].unique()
 
     return harbour_by_region
 
 
 def get_international_trips(trips_df):
+    '''
+    calculate the % of international trips.
+
+    Args:
+        dataframe: dataframe contains all voyages
+
+    Returns:
+        %: (total international voyages) / (total voyages)
+
+    '''
+
     total_voyage = trips_df.shape[0]
     east_water = trips_df.loc[(trips_df["Departure Region"] == "East Canadian Water Region") |
                               (trips_df["Arrival Region"] == "East Canadian Water Region")].shape[0]
@@ -251,20 +313,52 @@ def get_international_trips(trips_df):
 
 def get_hours(td):
   """
-  input timedelta
-  return number of hours
+  Utility to calculate the duration of trips
+
+  Args:
+    td: timedelta
+
+  Return: number of hours
   """
+
   return td.days * 24 + round(td.seconds/3600,2)
 
+
 def get_trip_duration(trips_df, total_voyage):
+    '''
+    calculate the average duration of a trip
+
+    Args:
+        dataframe: The dataframe to process
+        total_voyage: total number of voyage
+
+    Returns:
+        duration of a trip in hours
+
+    '''
+
     duration = trips_df['Arrival Date'] - trips_df['Departure Date']
     duration_hour = duration.apply(get_hours)
     total_duration_hour = duration_hour.sum()
     avg_duration_hour = round(total_duration_hour / total_voyage, 2)
     avg_duration_hour = "{:,}".format(avg_duration_hour)
+
     return avg_duration_hour
 
+
 def get_vessel_harbour(trips_df_heat, vessel_chosen, region, year):
+    '''
+    Given a region, calculate the number of voyages using a certain type vessel by harbour.
+
+    Args:
+        trips_df_heat: The dataframe to process
+        vessel_chosen: one type of vessel
+        region: name
+        year: name
+    Returns:
+        dataframe contains number of voyages in each harbour of the given region.
+
+    '''
 
     trips_vessel = trips_df_heat.loc[trips_df_heat["Vessel Type"] == vessel_chosen]
 
