@@ -9,23 +9,20 @@
     This file is the entry point for our dash app.
 '''
 
-import json
 import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
 import dash_daq as daq
 import dash_bootstrap_components as dbc
 import pandas as pd
-
-import plotly.express as px
 import plotly.graph_objects as go
 
 import template
 import preprocess
-import heatmap, line_charts, bar_charts, hover_template, dot_charts, passage_map
+import heatmap, line_charts, bar_charts, dot_charts, passage_map
 #
 #
-# Read: When data is local, read and process original trip file.
+# Read: data is local, read and process original trip file.
 # trips_filename = "./assets/data/TRIP_NEW.csv"
 # detail_filename = "./assets/data/TRIP_DETAIL_NEW.csv"
 # or read from a smaller file (get rid of the columns we do not use)
@@ -45,17 +42,6 @@ detail_df = pd.read_csv("https://inf8808-vis-test.s3.amazonaws.com/web-hosting/d
 trips_df_heat = preprocess.convert_dates(trips_df_heat)
 trips_df_heat = preprocess.filter_years(trips_df_heat, 2011, 2021)  # to be used in region, harbour, vessel.
 
-#
-# debug start
-# yearly_df = preprocess.summarize_yearly_counts(trips_df_heat, 0) # 0 means Departure trip, comes from radio button
-# data = preprocess.restructure_df(yearly_df)
-
-# eg_region = "St. Lawrence Seaway Region"
-# eg_harbour = "Lac St-Louis (area)"
-# year = 2016
-# line_data = preprocess.get_depart_by_harbour(trips_df_heat, eg_region, eg_harbour)
-# line_data = preprocess.prepare_day_month_data_by_harbour(line_data, year, "daily")
-# debug end
 
 # summary panel
 total_voyage0 = trips_df_heat.shape[0]
