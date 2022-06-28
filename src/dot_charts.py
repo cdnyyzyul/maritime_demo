@@ -2,7 +2,7 @@
 import plotly.graph_objects as go
 import plotly.express as px
 import hover_template
-import numpy as np
+from template import THEME
 
 
 def get_empty_figure():
@@ -46,11 +46,13 @@ def get_vesselport_figure(dotplot_data, region, year):
 
     fig_VRH = px.scatter(dotplot_data, x="Counts", y="Harbour",
                          title=f"{region} in {year}",
-                         size=np.sqrt(dotplot_data.Counts),
                          )
 
+    fig_VRH.update_traces(marker=dict(size=12, color=THEME["line_bar_color_total"],
+                                      opacity=0.6,
+                                      line=dict(width=2, color="white")
+                                      ))
 
-    fig_VRH.update_traces(textposition='top right')
     fig_VRH.update_layout(xaxis=dict(showgrid=True, showline=False),
                           yaxis=dict(showgrid=False, showline=True),
                           height=700,

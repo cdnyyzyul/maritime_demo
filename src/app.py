@@ -491,7 +491,7 @@ def update_page(filter_chosen):
                 html.Div([
                     html.Br(),
                     html.Label(
-                        "Fill in a trip Id. e.g., 23079000000766035, empty map inidcates invalid Id. "
+                        "Fill in a trip Id. e.g., 2079000000818245, empty map inidcates invalid Id. "
                     ),
 
                     html.Div([
